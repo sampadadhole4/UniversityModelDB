@@ -1,3 +1,24 @@
+SET SERVEROUTPUT ON;
+
+CREATE SEQUENCE sndb_role_id_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE sndb_user_login_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE sndb_gender_data_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE sndb_user_account_id_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE SNDB_STATUS_Seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE SNDB_ADDFRIEND_DATA_Seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE sndb_CONVERSATION_PRI_id_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE sndb_message_data_ID_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE sndb_Payment_Request_ID_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+create sequence sndb_group_seq start with 1 increment by 1 nocache nocycle;
+create sequence SNDB_group_recipient_seq start with 1 increment by 1 nocache nocycle;
+create sequence SNDB_reminder_freq_seq  start with 1 increment by 1 nocache nocycle;
+create sequence SNDB_GROUP_MESSAGE_seq start with 1 increment by 1 nocache nocycle;
+create sequence SNDB_USER_PHOTO_DATA_SEQ start with 1 increment by 1 nocache nocycle;
+create sequence SNDB_POST_DATA_SEQ start with 1 increment by 1 nocache nocycle;
+create sequence SNDB_VOTE_DATA_SEQ start with 1 increment by 1 nocache nocycle;
+create sequence SNDB_LOGGED_IN_ID_SEQ start with 1 increment by 1 nocache nocycle;
+
+
 DECLARE
     row_count NUMBER(10);
 BEGIN
@@ -87,6 +108,47 @@ FOREIGN KEY (user_id) REFERENCES SNDB_USER_LOGIN(user_login_id)
 ')]';
 
 
+ EXECUTE IMMEDIATE q'[INSERT INTO CONFIG_TABLE VALUES ('SNDB_POST_DATA','CREATE TABLE SNDB_POST_DATA
+(
+         post_id number NOT NULL,
+       subject varchar2(50) NOT NULL,
+       content varchar2(50),
+       user_id number NOT NULL,
+       CONSTRAINT SNDB_post_id_pk PRIMARY KEY (post_id),
+       CONSTRAINT SNDB_FK_POST_user_id FOREIGN KEY (user_id)
+       REFERENCES SNDB_USER_ACCOUNT(user_id)
+
+)
+')]';
+
+
+ EXECUTE IMMEDIATE q'[INSERT INTO CONFIG_TABLE VALUES ('SNDB_votes_data','CREATE TABLE SNDB_votes_data
+(
+       vote_id number NOT NULL,
+       post_id number NOT NULL,
+       upcount number,
+       downcount number,
+        CONSTRAINT SNDB_vote_id_pk PRIMARY KEY (vote_id),
+       CONSTRAINT SNDB_FK_post_id FOREIGN KEY (post_id)
+       REFERENCES SNDB_POST_DATA(post_id)
+
+
+)
+')]';
+
+ EXECUTE IMMEDIATE q'[INSERT INTO CONFIG_TABLE VALUES ('SNDB_logged_in_data','CREATE TABLE SNDB_logged_in_data
+(
+    clock_in_id number NOT NULL,
+       user_logged_id number NOT NULL,
+       login_time timestamp,
+       logout_time timestamp,
+        CONSTRAINT SNDB_clock_in_id_pk PRIMARY KEY (clock_in_id),
+       CONSTRAINT SNDB_FK_user_logged_id FOREIGN KEY (user_logged_id)
+       REFERENCES SNDB_USER_ACCOUNT(user_id)
+
+)
+')]';
+
 EXECUTE IMMEDIATE q'[INSERT INTO CONFIG_TABLE VALUES ('SNDB_STATUS','CREATE TABLE SNDB_STATUS
 (
        status_id number NOT NULL,
@@ -135,8 +197,8 @@ EXECUTE IMMEDIATE q'[INSERT INTO CONFIG_TABLE VALUES ('SNDB_ADDFRIEND_DATA','CRE
     
                )
         ')]';
-        
-        EXECUTE IMMEDIATE q'[INSERT INTO CONFIG_TABLE VALUES ('SNDB_message_data','CREATE TABLE SNDB_message_data 
+
+   EXECUTE IMMEDIATE q'[INSERT INTO CONFIG_TABLE VALUES ('SNDB_message_data','CREATE TABLE SNDB_message_data 
                 (	
             
             message_id number NOT NULL,
@@ -156,9 +218,9 @@ CONSTRAINT SNDB_Fk_To_messg_id FOREIGN KEY (to_message_id)
        CONSTRAINT sndb_CHK_PAYMENT_REQUESTED CHECK (IS_PAYMENT_REQUESTED IN(''YES'',''NO''))
                )
         ')]';
-        
-        
-         EXECUTE IMMEDIATE q'[INSERT INTO CONFIG_TABLE VALUES ('SNDB_payment_request_data','CREATE TABLE SNDB_payment_request_data 
+
+
+   EXECUTE IMMEDIATE q'[INSERT INTO CONFIG_TABLE VALUES ('SNDB_payment_request_data','CREATE TABLE SNDB_payment_request_data 
                 (	
             
       payment_request_id number NOT NULL ,
@@ -181,7 +243,8 @@ CONSTRAINT SNDB_Fk_To_messg_id FOREIGN KEY (to_message_id)
        
                )
         ')]';
-        
+
+
         EXECUTE IMMEDIATE q'[INSERT INTO CONFIG_TABLE VALUES ('SNDB_GROUP','CREATE TABLE SNDB_GROUP 
             (	
     group_id number NOT NULL,
@@ -203,8 +266,9 @@ CONSTRAINT SNDB_group_id_pk PRIMARY KEY (group_id)
 	   CONSTRAINT sndb_user_group_ID_pk PRIMARY KEY (user_account_id, group_id)
 	   )
 	')]'; 
-    
-    EXECUTE IMMEDIATE q'[INSERT INTO CONFIG_TABLE VALUES ('SNDB_group_recipient','CREATE TABLE SNDB_group_recipient 
+
+
+   EXECUTE IMMEDIATE q'[INSERT INTO CONFIG_TABLE VALUES ('SNDB_group_recipient','CREATE TABLE SNDB_group_recipient 
             (	
        group_recipient_id number NOT NULL,
        group_id number NOT NULL,
@@ -212,11 +276,12 @@ CONSTRAINT SNDB_group_id_pk PRIMARY KEY (group_id)
        created_date date NOT NULL,
        is_group_active varchar2(10),
        CONSTRAINT group_recipnt_id_pk PRIMARY KEY (group_recipient_id ),
-	   CONSTRAINT sndb_FK_user_grp_ID_key FOREIGN KEY (user_id,group_id)
+       CONSTRAINT sndb_FK_user_grp_ID_key FOREIGN KEY (user_id,group_id)
     REFERENCES SNDB_USER_ACCOUNT_GROUP(user_account_id,group_id)
   )
-    ')]';
-    execute immediate q'[insert into config_table values('SNDB_reminder_freq', 'create table SNDB_reminder_freq
+    ')]'; 
+
+execute immediate q'[insert into config_table values('SNDB_reminder_freq', 'create table SNDB_reminder_freq
 (
        reminder_id number NOT NULL,
        freq_type varchar2(20)  NOT NULL,
@@ -227,45 +292,12 @@ CONSTRAINT SNDB_group_id_pk PRIMARY KEY (group_id)
 )
 ')]';
 
-execute immediate q'[insert into config_table values('SNDB_GROUP_MESSAGE', 'create table SNDB_GROUP_MESSAGE
-(
-       group_message_PRI_id number NOT NULL,
-       group_message_id number NOT NULL,
-       subject varchar2(50),
-       creator_id number NOT NULL,
-       group_message_content clob NOT NULL,
-       group_message_created_date date NOT NULL,
-       Is_reminder varchar2(10) NOT NULL,
-       Next_reminder_date date NOT NULL,
-       reminder_freq_id number NOT NULL,
-       reminder_expiry_date date NOT NULL,
-       group_message_status varchar2(10),
-CONSTRAINT sndb_group_message_id_pk PRIMARY KEY (group_message_PRI_id ),
-   CONSTRAINT sndb_FK_creator_id FOREIGN KEY (creator_id)
-    REFERENCES SNDB_user_account(user_id),
-    CONSTRAINT sndb_FK_RECIP_MESSAGE_id FOREIGN KEY (group_message_id)
-    REFERENCES SNDB_GROUP_RECIPIENT(group_recipient_id),
-    CONSTRAINT sndb_FK_reminder_frequ_id FOREIGN KEY (reminder_freq_id)
-    REFERENCES SNDB_reminder_freq(reminder_id),
-	CONSTRAINT sndb_Is_reminder CHECK (Is_reminder IN(''YES'',''NO'')),
-	CONSTRAINT sndb_group_message_status CHECK (group_message_status IN(''Delivered'',''Read''))
-)
-')]';
     END IF;
-
 END;
 /
 
-DROP TABLE config_table;
+--DROP TABLE CONFIG_TABLE;
 
-DROP TABLE SNDB_message_data;
-DROP TABLE SNDB_payment_request_data;
-DELETE SNDB_message_data;
-
-SELECT
-    *
-FROM
-    config_table;
 
 DECLARE
     CURSOR config_table_cur IS
@@ -289,11 +321,6 @@ BEGIN
             user_tables
         WHERE
             table_name = upper(tab_name);
-
-        dbms_output.put_line('tanle_name is ='
-                             || tab_name
-                             || 'row count i s='
-                             || row_count);
         IF ( row_count > 0 ) THEN
             dbms_output.put_line('TABLE '
                                  || tab_name
@@ -311,10 +338,4 @@ BEGIN
     dbms_output.put_line('ALL TABLES CREATED');
 END;
 /
-
-SELECT
-    *
-FROM
-    user_tables;
-
 

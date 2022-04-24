@@ -1,15 +1,3 @@
-SET SERVEROUTPUT ON;
-select * from user_tables;
-
-CREATE SEQUENCE sndb_role_id_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
-CREATE SEQUENCE sndb_user_login_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
-CREATE SEQUENCE sndb_gender_data_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
-CREATE SEQUENCE sndb_user_account_id_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
-CREATE SEQUENCE sndb_CONVERSATION_PRI_id_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
-CREATE SEQUENCE SNDB_STATUS_Seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
-CREATE SEQUENCE SNDB_ADDFRIEND_DATA_Seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
-CREATE SEQUENCE sndb_message_data_ID_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
-CREATE SEQUENCE sndb_Payment_Request_ID_seq START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
 CREATE OR REPLACE PACKAGE INSERTIONS
     AS    
@@ -18,12 +6,21 @@ CREATE OR REPLACE PACKAGE INSERTIONS
         PROCEDURE ADD_USER_LOGIN(i_username in SNDB_user_login.username%type, i_password in SNDB_user_login.password%TYPE, i_user_type in SNDB_user_login.user_type%TYPE);
         PROCEDURE ADD_GENDER_DATA(i_name in SNDB_gender_data.name%type);
         PROCEDURE SNDB_ADD_user_account(I_user_id in SNDB_user_account.user_id%type, I_first_name in SNDB_user_account.first_name%type,I_last_name in SNDB_user_account.last_name%type,I_email_id in SNDB_user_account.email_id%type,I_phone_number IN SNDB_user_account.phone_number%type, I_university_name IN SNDB_user_account.university_name%type, I_college_name IN SNDB_user_account.college_name%type,I_course_name in SNDB_user_account.course_name%type,I_gender_id in SNDB_user_account.gender_id%type,I_dob in SNDB_user_account.dob%type,I_otp in SNDB_user_account.otp%type,I_created_at in SNDB_user_account.created_at%type );
+        PROCEDURE SNDB_ADD_PHOTO_DATA(i_user_account_id in SNDB_USER_PHOTO_DATA.user_account_id%type,i_photo_link in SNDB_USER_PHOTO_DATA.photo_link%type, i_time_added in SNDB_USER_PHOTO_DATA.time_added%type,i_photo_visibility in SNDB_USER_PHOTO_DATA.photo_visibility%type);
+        PROCEDURE SNDB_ADD_POST_DATA(i_subject in SNDB_POST_DATA.subject%type,i_content in SNDB_POST_DATA.content%type,i_user_id in SNDB_POST_DATA.user_id%type);
+        PROCEDURE SNDB_ADD_votes_data(i_post_id in SNDB_votes_data.post_id%type,i_upcount in SNDB_votes_data.upcount%type,i_downcount in SNDB_votes_data.downcount%type);
+        PROCEDURE SNDB_ADD_logged_in_data(i_user_logged_id in SNDB_logged_in_data.user_logged_id%type,i_login_time in SNDB_logged_in_data.login_time%type,i_logout_time in SNDB_logged_in_data.logout_time%type);
         PROCEDURE SNDB_ADD_STATUS_DATA(i_status_type in SNDB_STATUS.status_type%type);
         PROCEDURE SNDB_ADD_FRIEND_DATA(i_requester_id in SNDB_ADDFRIEND_DATA.requester_id%type,i_addressee_id in SNDB_ADDFRIEND_DATA.addressee_id%type,i_created_datetime in SNDB_ADDFRIEND_DATA.created_datetime%type,i_status_id in SNDB_ADDFRIEND_DATA.status_id%type, i_logout_time in SNDB_ADDFRIEND_DATA.logout_time%type,i_Status_comment in SNDB_ADDFRIEND_DATA.Status_comment%type,i_approved_time in SNDB_ADDFRIEND_DATA.approved_time%type,i_status_updated_time in SNDB_ADDFRIEND_DATA.status_updated_time%type);
         PROCEDURE SNDB_ADD_SNDB_conversation_data(I_conversation_id in SNDB_conversation_data.conversation_id%type,I_conversation_initiated_id in SNDB_conversation_data.conversation_initiated_id%type,I_conversation_started in SNDB_conversation_data.conversation_started%type,I_conversation_ended in SNDB_conversation_data.conversation_ended%type,I_participant_id in SNDB_conversation_data.participant_id%type);
         procedure SNDB_ADD_GROUP(i_group_name in sndb_group.group_name%type,i_created_date in sndb_group.created_date%type, i_is_group_active in sndb_group.is_group_active%type);
         PROCEDURE SNDB_ADD_message_data(i_messsage_content in SNDB_message_data.messsage_content%type,i_message_timestamp in SNDB_message_data.message_timestamp%type,i_conversation_id in SNDB_message_data.conversation_id%type,i_from_message_id in SNDB_message_data.from_message_id%type,i_to_message_id in SNDB_message_data.to_message_id%type,i_IS_PAYMENT_REQUESTED in SNDB_message_data.IS_PAYMENT_REQUESTED%type);
         PROCEDURE SNDB_ADD_payment_request_data(i_requester_id in SNDB_payment_request_data.requester_id%type,i_reciever_id in SNDB_payment_request_data.reciever_id%type,i_request_status in SNDB_payment_request_data.request_status%type,i_request_amount in SNDB_payment_request_data.request_amount%type,i_payment_description in SNDB_payment_request_data.payment_description%type,i_payment_date in SNDB_payment_request_data.payment_date%type,i_payment_method in SNDB_payment_request_data.payment_method%type,i_Message_id in SNDB_payment_request_data.Message_id%type);
+        PROCEDURE SNDB_ADD_user_account_group(i_user_account_id in SNDB_user_account_group.user_account_id%type, i_user_group_id in SNDB_user_account_group.group_id%type);
+
+        procedure SNDB_add_group_recipient(i_group_id_recipientdata in SNDB_group_recipient.group_id%type,i_user_id_recipientdata in SNDB_group_recipient.user_id%type, i_created_date_recipient in SNDB_group_recipient.created_date%type,i_is_group_active_recipient in SNDB_group_recipient.is_group_active%type);
+
+        procedure SNDB_add_reminder_freq(i_freq_type in SNDB_reminder_freq.freq_type%type, i_is_active in SNDB_reminder_freq.is_active%type);
 
 
     END INSERTIONS;
@@ -314,6 +311,198 @@ WHEN INVALID_PHONE_NUM_LENGTH THEN
 dbms_output.put_line('Phone Number'||I_phone_number|| 'entered has more than 10 digits.');
 dbms_output.put_line('Enter valid phone number');
 END SNDB_ADD_user_account;
+
+PROCEDURE SNDB_ADD_PHOTO_DATA(i_user_account_id in SNDB_USER_PHOTO_DATA.user_account_id%type,
+i_photo_link in SNDB_USER_PHOTO_DATA.photo_link%type, i_time_added in SNDB_USER_PHOTO_DATA.time_added%type,
+i_photo_visibility in SNDB_USER_PHOTO_DATA.photo_visibility%type)
+AS
+i_photo_id number;
+i_username varchar2(50);
+PROFILE_PHOTO_EXISTS EXCEPTION;
+Photo_count NUMBER;
+BEGIN
+select count (*) into Photo_count from SNDB_USER_PHOTO_DATA where user_account_id = i_user_account_id;
+select username into i_username from sndb_user_login c where c.user_login_id= i_user_account_id;
+IF Photo_count>0 THEN
+RAISE PROFILE_PHOTO_EXISTS;
+ELSE
+i_photo_id:=SNDB_USER_PHOTO_DATA_SEQ.nextval;
+INSERT INTO SNDB_USER_PHOTO_DATA(
+PHOTO_id,
+user_account_id,
+photo_link,
+time_added,
+photo_visibility
+)
+values(
+i_photo_id,
+i_user_account_id,
+i_photo_link,
+i_time_added,
+i_photo_visibility
+)
+;
+dbms_output.put_line('Photo of '||i_username|| ' added Successfully!');
+END IF;
+EXCEPTION
+when PROFILE_PHOTO_EXISTS THEN
+dbms_output.put_line('Photo for '||i_username|| ' already exists.');
+END SNDB_ADD_PHOTO_DATA;
+
+PROCEDURE SNDB_ADD_POST_DATA(i_subject in SNDB_POST_DATA.subject%type,
+i_content in SNDB_POST_DATA.content%type,
+i_user_id in SNDB_POST_DATA.user_id%type)
+as
+j_post_id Number;
+user_id_count_from_user_account number;
+user_id_doesnt_exists_in_user_Account exception;
+
+begin
+
+select count (*) into user_id_count_from_user_account from SNDB_USER_ACCOUNT a where a.user_id = i_user_id;
+if user_id_count_from_user_account =0 then
+raise user_id_doesnt_exists_in_user_Account;
+end if;
+
+
+j_post_id:= SNDB_POST_DATA_SEQ.nextval;
+
+insert into SNDB_POST_DATA(	
+         post_id,
+       subject,
+       content,
+       user_id
+       )
+values (
+j_post_id,
+i_subject,
+i_content,
+i_user_id
+);
+
+dbms_output.put_line('User Photo for user_id '||i_user_id|| ' added successfully!');
+
+Exception
+when user_id_doesnt_exists_in_user_Account then
+dbms_output.put_line('No user exsists with user_id '||i_user_id ||' in user_account table');
+dbms_output.put_line('Enter valid parent key values');
+
+END SNDB_ADD_POST_DATA;
+
+
+PROCEDURE SNDB_ADD_votes_data(i_post_id in SNDB_votes_data.post_id%type,
+i_upcount in SNDB_votes_data.upcount%type,
+i_downcount in SNDB_votes_data.downcount%type)
+as
+j_VOTE_ID Number;
+POST_id_count_from_POST_DATA number;
+POST_id_doesnt_exists_in_POST_DATA exception;
+
+begin
+
+select count (*) into POST_id_count_from_POST_DATA from SNDB_POST_DATA a where a.POST_ID = i_post_id;
+if POST_id_count_from_POST_DATA =0 then
+raise POST_id_doesnt_exists_in_POST_DATA;
+end if;
+
+
+
+j_VOTE_ID:= SNDB_VOTE_DATA_SEQ.nextval;
+
+insert into SNDB_votes_data(	
+     vote_id,
+       post_id,
+       upcount,
+       downcount
+       )
+values (
+j_VOTE_ID,
+i_post_id,
+i_upcount,
+i_downcount 
+);
+
+dbms_output.put_line('VOTES DATA for POST_id '||i_post_id|| ' added successfully!');
+
+Exception
+when POST_id_doesnt_exists_in_POST_DATA then
+dbms_output.put_line('No POST exsists with post_id '||i_post_id ||' in POST_DATA TABLE');
+dbms_output.put_line('Enter valid parent key values');
+
+END SNDB_ADD_votes_data;
+
+
+PROCEDURE SNDB_ADD_logged_in_data(i_user_logged_id in SNDB_logged_in_data.user_logged_id%type,
+i_login_time in SNDB_logged_in_data.login_time%type,
+i_logout_time in SNDB_logged_in_data.logout_time%type)
+as
+j_clock_in_id Number;
+V_CLOCKED_ID number;
+user_id_FROM_user_account number;
+VAR_LOG_OUT_TIME TIMESTAMP;
+USER_id_doesnt_exists_in_USER_ACCOUNT_TABLE exception;
+USER_ALREADY_HAS_ACTIVE_LOGIN EXCEPTION;
+begin
+
+select count (*) into user_id_FROM_user_account from SNDB_USER_ACCOUNT a where a.user_id = i_user_logged_id;
+if user_id_FROM_user_account =0 then
+raise USER_id_doesnt_exists_in_USER_ACCOUNT_TABLE;
+end if;
+
+SELECT COUNT(*) INTO V_CLOCKED_ID FROM sndb_logged_in_data a WHERE a.user_logged_id =i_user_logged_id;
+ IF V_CLOCKED_ID >0 THEN
+     select (LOGOUT_TIME) into VAR_LOG_OUT_TIME
+  from ( select a.LOGOUT_TIME
+              , row_number() over ( order by a.user_logged_id desc ) as row_num
+           from SNDB_logged_in_data a ) ;     
+           if VAR_LOG_OUT_TIME is null then
+          raise USER_ALREADY_HAS_ACTIVE_LOGIN;
+          
+ELSIF VAR_LOG_OUT_TIME >= i_login_time  then
+RAISE USER_ALREADY_HAS_ACTIVE_LOGIN;
+else
+j_clock_in_id:= SNDB_LOGGED_IN_ID_SEQ.nextval;
+
+insert into SNDB_logged_in_data(	
+    clock_in_id,
+       user_logged_id,
+       login_time,
+       logout_time
+       )
+values (
+j_clock_in_id,
+i_user_logged_id,
+i_login_time,
+i_logout_time
+);
+
+dbms_output.put_line('USER LOGGED IN DATA FOR USER ID '||i_user_logged_id|| ' added successfully!');
+end if;
+else
+j_clock_in_id:= SNDB_LOGGED_IN_ID_SEQ.nextval;
+
+insert into SNDB_logged_in_data(	
+    clock_in_id,
+       user_logged_id,
+       login_time,
+       logout_time
+       )
+values (
+j_clock_in_id,
+i_user_logged_id,
+i_login_time,
+i_logout_time
+);
+
+dbms_output.put_line('USER LOGGED IN DATA FOR USER ID '||i_user_logged_id|| ' added successfully!');
+end if;
+Exception
+when USER_id_doesnt_exists_in_USER_ACCOUNT_TABLE then
+dbms_output.put_line('NO USER EXISTS WITH USER ID '||i_user_logged_id ||' IN USER_ACCOUNT_TABLE');
+dbms_output.put_line('Enter valid parent key values');
+WHEN USER_ALREADY_HAS_ACTIVE_LOGIN THEN
+dbms_output.put_line('USER '||i_user_logged_id||' ALREADY HAS AN ACTIVE LOGIN, CANNOT START NEW LOGIN');
+END SNDB_ADD_logged_in_data;
 
 
 PROCEDURE SNDB_ADD_STATUS_DATA(i_status_type in SNDB_STATUS.status_type%type)
@@ -895,8 +1084,190 @@ when is_group_active_null then
 dbms_output.put_line('is_group_active cannot be null.');
 end sndb_add_group;
 
+PROCEDURE SNDB_ADD_user_account_group(i_user_account_id in SNDB_user_account_group.user_account_id%type, i_user_group_id in SNDB_user_account_group.group_id%type)
+as
+user_account_group_id_exists exception;
+useraccount_group_id_count number; 
+is_null number;
+user_account_id_null exception;
+group_id_null exception;
+user_account_id_not_exists exception;
+group_id_not_exists exception;
+useraccount_id_count number;
+group_id_count number;
+begin
+select count(*) into useraccount_id_count from sndb_user_account a where a.user_id = i_user_account_id;
+if useraccount_id_count = 0 then
+raise user_account_id_not_exists;
+end if;
+select count(*) into group_id_count from sndb_group c where c.group_id  = i_user_group_id;
+if group_id_count = 0 then
+raise group_id_not_exists;
+end if;
+check_null(i_user_account_id, is_null);
+if is_null = 1 then
+raise user_account_id_null;
+end if;
+check_null(i_user_group_id, is_null);
+if is_null = 1 then
+raise group_id_null;
+end if;
+select count(*) into useraccount_group_id_count from SNDB_user_account_group b where b.user_account_id = i_user_account_id and b.group_id = i_user_group_id;
+if useraccount_group_id_count > 0 then
+raise user_account_group_id_exists;
+else
+insert into SNDB_user_account_group (
+user_account_id,
+group_id)
+values
+(
+i_user_account_id,
+i_user_group_id
+);
+dbms_output.put_line('the user account id and group id are ' || i_user_account_id || ' ' || i_user_group_id || ' succesfully added');
+end if;
+exception
+when user_account_id_not_exists then
+dbms_output.put_line('user_account_id is not present in user_account table');
+when group_id_not_exists then
+dbms_output.put_line('group_id is not present in group table');
+when user_account_id_null then
+dbms_output.put_line('entered user_account_id cannot be null');
+when group_id_null then
+dbms_output.put_line('entered group_id cannot be null');
+when user_account_group_id_exists then
+dbms_output.put_line('user_account_id and group_id already exists');
+end SNDB_ADD_user_account_group;
+
+procedure SNDB_add_group_recipient(
+i_group_id_recipientdata in SNDB_group_recipient.group_id%type,
+i_user_id_recipientdata in SNDB_group_recipient.user_id%type, i_created_date_recipient in SNDB_group_recipient.created_date%type,
+i_is_group_active_recipient in SNDB_group_recipient.is_group_active%type)
+as
+is_null number;
+j_group_recipient_id number;
+group_id_recipientdata_is_null exception;
+user_id_recipientdata_is_null exception;
+created_date_recipient_is_null exception;
+user_account_group_exists exception;
+user_account_group number;
+useraccount_id_count_recipient number;
+group_recipeint_date date;
+user_account_id_not_exists_recipient EXCEPTION;
+not_created_correct_date EXCEPTION;
+begin
+select count(*) into useraccount_id_count_recipient from sndb_user_account_group a where a.user_account_id = i_user_id_recipientdata and  a.group_id  = i_group_id_recipientdata;
+if useraccount_id_count_recipient = 0 then
+raise user_account_id_not_exists_recipient;
+end if;
+select b.created_date into group_recipeint_date from sndb_group b where b.group_id  = i_group_id_recipientdata;
+if group_recipeint_date >= i_created_date_recipient then
+raise not_created_correct_date;
+end if;
+check_null(i_group_id_recipientdata, is_null);
+if is_null = 1 then
+raise group_id_recipientdata_is_null;
+end if;
+check_null(i_user_id_recipientdata, is_null);
+if is_null = 1 then
+raise user_id_recipientdata_is_null;
+end if;
+check_null(i_created_date_recipient, is_null);
+if is_null = 1 then
+raise created_date_recipient_is_null;
+end if;
+select count(*) into user_account_group from SNDB_group_recipient b where b.group_id = i_group_id_recipientdata and b.user_id = i_user_id_recipientdata;
+if user_account_group > 0 then
+raise user_account_group_exists;
+else
+j_group_recipient_id :=SNDB_group_recipient_seq.nextval();
+insert into SNDB_group_recipient(
+group_recipient_id,
+group_id,
+user_id,
+created_date,
+is_group_active
+)
+values
+(
+j_group_recipient_id,
+i_group_id_recipientdata,
+i_user_id_recipientdata,
+i_created_date_recipient,
+i_is_group_active_recipient
+);
+dbms_output.put_line('group data like created date,active are added to the table succesfully');
+end if;
+exception
+when user_account_id_not_exists_recipient then
+dbms_output.put_line('user_account_id and group id combo is not presnt in user_account_group table');
+when not_created_correct_date then
+dbms_output.put_line('group_id' || ' '||i_group_id_recipientdata||'  is not active for the entered date');
+dbms_output.put_line('Please enter correct date');
+when user_id_recipientdata_is_null then 
+dbms_output.put_line('user_id cannot be null in recipient table');
+when group_id_recipientdata_is_null then 
+dbms_output.put_line('group_id cannot be null in recipient table');
+when created_date_recipient_is_null then
+dbms_output.put_line('created date cannot be null in recipient table');
+when user_account_group_exists then
+dbms_output.put_line('group id, user account exists and cannot be added');
+end SNDB_add_group_recipient;
+
+procedure SNDB_add_reminder_freq(i_freq_type in SNDB_reminder_freq.freq_type%type, i_is_active in SNDB_reminder_freq.is_active%type)
+as
+is_null number;
+i_reminder_id number;
+freq_type_null exception;
+is_active_null exception;
+freq_value number;
+freq_type_exists exception;
+begin
+check_null(i_freq_type,is_null);
+if is_null=1 then
+raise freq_type_null;
+end if;
+check_null(i_is_active,is_null);
+if is_null=1 then
+raise is_active_null;
+end if;
+select count(*) into freq_value from SNDB_reminder_freq c where c.freq_type = i_freq_type;
+if freq_value > 0 then 
+raise freq_type_exists;
+else
+i_reminder_id:= SNDB_reminder_freq_seq.nextval();
+insert into SNDB_reminder_freq (
+reminder_id,
+freq_type,
+is_active)
+values
+(
+i_reminder_id,
+UPPER(i_freq_type),
+UPPER(i_is_active)
+);
+end if;
+DBMS_OUTPUT.PUT_LINE('freq_type : ' ||i_freq_type || ' is succesfully added.');
+exception
+when freq_type_null then
+dbms_output.put_line('Freq type cannot be null');
+when is_active_null then
+dbms_output.put_line('is_active cannot be null');
+when freq_type_exists then
+DBMS_OUTPUT.PUT_LINE('freq_type : ' ||i_freq_type || ' is already present.');
+WHEN others then
+if sqlcode=-02290 then
+dbms_output.put_line('This error could be due to :');
+dbms_output.put_line('1. Active should be from the following list: ''YES'',''NO''');
+dbms_output.put_line('2. Freq type should be from the following list: ''DAILY'',''WEEKLY'',''BIWEEKLY'',''MONTHLY''');
+END IF;
+end SNDB_add_reminder_freq;
+
+
+
  END INSERTIONS;
     /
+
     
     
     
@@ -979,3 +1350,22 @@ FROM SNDB_ADDFRIEND_DATA ;'
 select * from SNDB_conversation_data;
 
 delete SNDB_conversation_data;
+
+
+begin
+SNDB_ADD_POST_DATA('postnew','Hi everyone',1);
+end;
+
+select * from sndb_post_data;
+
+BEGIN
+SNDB_ADD_votes_data(1,2,3);
+SNDB_ADD_votes_data(2,20,30);
+END;
+
+SELECT * FROM SNDB_VOTES_DATA;
+
+
+BEGIN
+SNDB_ADD_logged_in_data(1,TO_TIMESTAMP('10-MAY-2022 02:30:33','DD-MON-YY HH24:MI:SS'),NULL);
+END;
