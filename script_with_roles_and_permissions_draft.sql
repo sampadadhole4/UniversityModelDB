@@ -447,7 +447,7 @@ then
 raise ex_invalid_role_name;
 end if;
 
-select count (*) into role_count from SNDB_user_roles_data where role_name = i_ROLE_NAME;
+select count (*) into role_count from SNDB_user_roles_data where role_name = upper(i_ROLE_NAME);
 if role_count>0 then
 raise Role_Already_Exists;
 else
@@ -509,7 +509,7 @@ values (
 i_user_login_id,
 i_username,
 i_password,
-i_user_type
+upper(i_user_type)
 );
 
 dbms_output.put_line('User '||i_username|| ' login Successful!');
@@ -839,7 +839,12 @@ user_id_FROM_user_account number;
 VAR_LOG_OUT_TIME TIMESTAMP;
 USER_id_doesnt_exists_in_USER_ACCOUNT_TABLE exception;
 USER_ALREADY_HAS_ACTIVE_LOGIN EXCEPTION;
+logintime_is_null exception;
 begin
+
+if i_login_time is null or length(i_login_time)=0 then
+raise logintime_is_null;
+end if;
 
 select count (*) into user_id_FROM_user_account from SNDB_USER_ACCOUNT a where a.user_id = i_user_logged_id;
 if user_id_FROM_user_account =0 then
@@ -894,6 +899,8 @@ i_logout_time
 dbms_output.put_line('USER LOGGED IN DATA FOR USER ID '||i_user_logged_id|| ' added successfully!');
 end if;
 Exception
+when logintime_is_null then
+dbms_output.put_line('Login time cannot be null');
 when USER_id_doesnt_exists_in_USER_ACCOUNT_TABLE then
 dbms_output.put_line('NO USER EXISTS WITH USER ID '||i_user_logged_id ||' IN USER_ACCOUNT_TABLE');
 dbms_output.put_line('Enter valid parent key values');
@@ -1660,8 +1667,6 @@ dbms_output.put_line('2. Freq type should be from the following list: ''DAILY'',
 END IF;
 end SNDB_add_reminder_freq;
 
-
-
 procedure SNDB_ADD_GROUP_MESSAGE(
 i_group_message_id in SNDB_GROUP_MESSAGE.group_message_id%type ,i_subject in SNDB_GROUP_MESSAGE.subject%type,
 i_creator_id in SNDB_GROUP_MESSAGE.creator_id%type,i_group_message_content in SNDB_GROUP_MESSAGE.group_message_content%type,
@@ -1690,18 +1695,6 @@ user_account_group_exists exception;
 group_rem_freq number;
 user_account_group number;
 begin
-select count(*) into creator_date_value from sndb_user_account a where a.user_id = i_creator_id;
-if creator_date_value > 0 then
-raise creator_id_exists;
-end if;
-select count(*) into group_message_value from SNDB_group_recipient b where b.group_recipient_id = i_group_message_id;
-if group_message_value > 0 then
-raise message_id_exists;
-end if;
-select count(*) into group_rem_freq from SNDB_reminder_freq c where c.reminder_id = i_reminder_freq_id;
-if group_rem_freq > 0 then
-raise group_rem_freq_exists;
-end if;
 check_null(i_group_message_id, is_null);
 if is_null = 1 then
 raise group_message_id_value_null;
@@ -1734,6 +1727,18 @@ check_null(i_reminder_expiry_date, is_null);
 if is_null = 1 then
 raise reminder_expiry_date_value_null;
 end if;
+select count(*) into creator_date_value from sndb_user_account a where a.user_id = i_creator_id;
+if creator_date_value = 0 then
+raise creator_id_exists;
+end if;
+select count(*) into group_message_value from SNDB_group_recipient b where b.group_recipient_id = i_group_message_id;
+if group_message_value = 0 then
+raise message_id_exists;
+end if;
+select count(*) into group_rem_freq from SNDB_reminder_freq c where c.reminder_id = i_reminder_freq_id;
+if group_rem_freq = 0 then
+raise group_rem_freq_exists;
+end if;
 select count(b.user_id) into user_account_group from SNDB_group_recipient b
 where b.group_id = 
 (select a.group_id from SNDB_group_recipient a
@@ -1765,11 +1770,11 @@ values
        i_creator_id ,
        i_group_message_content,
        i_group_message_created_date,
-       i_Is_reminder,
+       upper(i_Is_reminder),
        i_Next_reminder_date,
        i_reminder_freq_id,
        i_reminder_expiry_date,
-       i_group_message_status
+       initcap(i_group_message_status)
 );
 end if;
 exception
@@ -1796,7 +1801,7 @@ dbms_output.put_line('reminder_freq_id cannot be null');
 when reminder_expiry_date_value_null then
 dbms_output.put_line('reminder_expiry_date cannot be null');
 when user_account_group_exists then
-dbms_output.put_line('group_message_id : '||i_group_message_id || ' and creator_id : '||i_creator_id|| ' is present in group recipeint table');
+dbms_output.put_line('For group_message_id : '||i_group_message_id || ' and creator_id : '||i_creator_id|| ' Minimun number of memeber in a group should be 3 to start a group message'); 
 WHEN others then
 if sqlcode=-02290 then
 dbms_output.put_line('This error could be due to :');
@@ -1854,6 +1859,7 @@ END SNDB_ASSIGN_PERMISSION_TO_ROLES;
                     WHEN NOT MATCHED THEN INSERT (ROLES_DESCRIPTION) 
                            VALUES (TEMP.ROLES_DESCRIPTION)';
         EXECUTE IMMEDIATE MERGE_STMT_SQL;
+        DBMS_OUTPUT.PUT_LINE('Roles permission data entered successfully!'); 
         COMMIT;
         EXCEPTION
         WHEN OTHERS THEN
@@ -1866,7 +1872,21 @@ END SNDB_ASSIGN_PERMISSION_TO_ROLES;
     AS
     MERGE_STMT_SQL VARCHAR2(500);
     USING_STMT VARCHAR2(500);
+    i_group_id number;
+    i_role_id number;
+    role_id_doesnt_exsists_in_user_roles_data exception;
+    role_id_doesnt_exsists_in_roles_permissions_data exception;
     BEGIN  
+    
+    SELECT COUNT(*) INTO i_group_id from SNDB_USER_ROLES_DATA a where a.role_id = L_GROUPS_ID;
+    if i_group_id = 0 then
+    raise role_id_doesnt_exsists_in_user_roles_data;
+    end if;
+     SELECT COUNT(*) INTO i_role_id from SNDB_ROLES_PERMISSIONS a where a.ROLES_ID = L_ROLES_ID;
+    if i_role_id = 0 then
+    raise role_id_doesnt_exsists_in_roles_permissions_data;
+    end if;
+    
         USING_STMT:= '(SELECT ' 
                         || L_GROUPS_ID || ' AS GROUPS_ID, '
                         || L_ROLES_ID || ' AS ROLES_ID '
@@ -1877,90 +1897,223 @@ END SNDB_ASSIGN_PERMISSION_TO_ROLES;
                    WHEN NOT MATCHED THEN INSERT (GROUPS_ID, ROLES_ID) 
                            VALUES (TEMP.GROUPS_ID, TEMP.ROLES_ID)'; 
         EXECUTE IMMEDIATE MERGE_STMT_SQL;
+         DBMS_OUTPUT.PUT_LINE('Groups roles data entered successfully!'); 
         COMMIT;
         EXCEPTION
+        when role_id_doesnt_exsists_in_user_roles_data then
+        DBMS_OUTPUT.PUT_LINE('Role id  entered doesnt exsists in user roles data table'); 
+        when role_id_doesnt_exsists_in_roles_permissions_data then
+        DBMS_OUTPUT.PUT_LINE('Role id  entered doesnt exsists in roles permissions data table'); 
         WHEN OTHERS THEN
             DBMS_OUTPUT.PUT_LINE(SQLERRM); 
         
     END ADD_GROUP_ROLES;
     /
     
---    create or replace PROCEDURE SNDB_ASSIGN_PERMISSION_TO_ROLES(U_USER_NAME VARCHAR, GROUP_NAME VARCHAR) 
---AS
-----USER_NAME VARCHAR2(100);
---ROLE_NAME varchar2(50);
---GRANT_sql varchar2(100);
---
---
--- CURSOR some_cur
---  IS
---    SELECT 
---        g.role_name, r.roles_description
---    FROM 
---        SNDB_USER_ROLES_DATA g
---        join SNDB_GROUPS_OF_ROLES gr on g.ROLE_id = gr.groups_id
---        join SNDB_ROLES_PERMISSIONS r on r.roles_id = gr.roles_id
---    where g.role_name = GROUP_NAME;
---
---BEGIN
---
-----SELECT FIRST_NAME INTO USER_NAME FROM USERS where FIRST_NAME = U_USER_NAME;
---
-----SELECT GROUP_NAME INTO ROLE_NAME;
---     FOR i IN some_cur
---     LOOP
---            ROLE_NAME:= I.roles_description;
---            GRANT_sql:= 'GRANT ' || ROLE_NAME || ' TO ' || U_USER_NAME;
---            dbms_output.put_line(grant_sql);
---            EXECUTE IMMEDIATE GRANT_sql;
---      END LOOP;
---END SNDB_ASSIGN_PERMISSION_TO_ROLES;
---/
-create view View_Student_details as
+
+CREATE OR REPLACE FUNCTION GET_LOGGEDIN_USER_ID 
+RETURN varchar2 
+IS
+L_USER_ID varchar2(50);
+BEGIN
+    SELECT USERNAME 
+        INTO L_USER_ID
+            FROM 
+            all_users 
+            WHERE USERNAME = (SELECT USER FROM DUAL);
+    RETURN L_USER_ID;
+END GET_LOGGEDIN_USER_ID;
+/
+
+
+
+create OR REPLACE view View_Student_details as
 select a.user_account_id  as User_ID , c.username as User_Name  , a.first_name ||' ' || a.last_name as Full_Name ,
 a.email_id as Email_ID, a.phone_number as Phone_Number, a.university_name as University_Name ,
 a.college_name as Colleg_Name,a.course_name as Course_Name, a.dob as Date_Of_Birth from sndb_user_account a ,
-sndb_user_login c where c.user_login_id = a.user_id and c.user_type = 'User';
+sndb_user_login c where c.user_login_id = a.user_id and c.user_type = 'user' and upper(c.username) = GET_LOGGEDIN_USER_ID;
 
+
+
+ BEGIN 
+
+     EXECUTE IMMEDIATE 'CREATE OR REPLACE PUBLIC SYNONYM SNDB_user_account FOR var_admin.SNDB_user_account';
+     EXECUTE IMMEDIATE 'CREATE OR REPLACE PUBLIC SYNONYM SNDB_USER_PHOTO_DATA FOR var_admin.SNDB_USER_PHOTO_DATA';
+     EXECUTE IMMEDIATE 'CREATE OR REPLACE PUBLIC SYNONYM SNDB_POST_DATA FOR var_admin.SNDB_POST_DATA';
+     EXECUTE IMMEDIATE 'CREATE OR REPLACE PUBLIC SYNONYM SNDB_votes_data FOR var_admin.SNDB_votes_data';
+     EXECUTE IMMEDIATE 'CREATE OR REPLACE PUBLIC SYNONYM SNDB_user_login FOR var_admin.SNDB_user_login';
+    -- EXECUTE IMMEDIATE 'CREATE OR REPLACE PUBLIC SYNONYM MY_ACTIONS FOR ADMIN.MY_ACTIONS';
+     EXECUTE IMMEDIATE 'CREATE OR REPLACE PUBLIC SYNONYM View_Student_details FOR new_tester_admin.View_Student_details';
+--     EXECUTE IMMEDIATE 'CREATE OR REPLACE PUBLIC SYNONYM MY_TEST_RESULTS FOR ADMIN.TEST_DETAILS';
+--     EXECUTE IMMEDIATE 'CREATE OR REPLACE SYNONYM VIEW_STAFF_SLOTS FOR ADMIN.STAFF_VIEW';
+--     EXECUTE IMMEDIATE 'CREATE OR REPLACE SYNONYM STAFF_LOGIN_PROC FOR ADMIN.STAFF_LOGIN';
+--     EXECUTE IMMEDIATE 'CREATE OR REPLACE SYNONYM CENTER_RESULTS FOR ADMIN.TEST_CENTER_HEAD_VIEW';
+--     EXECUTE IMMEDIATE 'CREATE OR REPLACE SYNONYM PUBLISH_TEST_RESULTS FOR ADMIN.PUBLISH_RESULTS'; 
+--     EXECUTE IMMEDIATE 'CREATE OR REPLACE SYNONYM MY_QUARANTINE_FACILITY_DETAILS FOR ADMIN.QUARANTINE_FACILITY_HEAD_VIEW'; 
+--     EXECUTE IMMEDIATE 'CREATE OR REPLACE SYNONYM DISCHARGE_PATIENTS FOR ADMIN.discharge_patient'; 
+END;
+/
 
 
 --------INSERT STATEMENTS----------
 BEGIN
-INSERTIONS.add_roles('user', 'user desc');
-INSERTIONS.add_roles('Admin', 'admin desc');
+INSERTIONS.add_roles('USER', 'can view all user specific views');
+INSERTIONS.add_roles('ADMIN', 'Managae all data');
+INSERTIONS.add_roles('REPORT ANALYST', 'View Reports');
+INSERTIONS.add_roles('SOCIAL MEDIA MANAGER', 'View VOTES, POSTS AND PHOTO VIEWS');
 
- ADD_ROLES_PERMISSIONS('CREATE SESSION');
- ADD_ROLES_PERMISSIONS('SELECT ON SNDB_USER_ACCOUNT');
-  ADD_ROLES_PERMISSIONS('EXECUTE ANY PROCEDURE');
-ADD_ROLES_PERMISSIONS('select on View_Student_details');
+ADD_ROLES_PERMISSIONS('CREATE SESSION');
+ADD_ROLES_PERMISSIONS('SELECT ON View_Student_details');
+ADD_ROLES_PERMISSIONS('EXECUTE ANY PROCEDURE');
+ADD_ROLES_PERMISSIONS('UPDATE ON View_Student_details');
+
+
 
 ADD_GROUP_ROLES(1,1);
    ADD_GROUP_ROLES(1,2);
   ADD_GROUP_ROLES(1,3);
   ADD_GROUP_ROLES(1,4);
 
-INSERTIONS.ADD_USER_LOGIN('mkumbhar','Meenu_spring_123','user');
---INSERTIONS.ADD_USER_LOGIN('Nikhitha','m123','user');
+
+
+INSERTIONS.ADD_USER_LOGIN('mkumbharea','Meenu_spring_123','user');
+
 INSERTIONS.ADD_USER_LOGIN('Shab','Nu1_spring_123','user');
 INSERTIONS.ADD_USER_LOGIN('Sanni','Eenu1_spring_123','user');
-INSERTIONS.ADD_USER_LOGIN('Nikhitha','m123','admin');
+INSERTIONS.ADD_USER_LOGIN('Nik','Koni_spring_123','admin');
+--INSERTIONS.ADD_USER_LOGIN('Sanni','eenu123','user');
+INSERTIONS.ADD_USER_LOGIN('Ki','Sik_spring_123','user');
+INSERTIONS.ADD_USER_LOGIN('meei','Aiem_spring_123','user');
+
+
+--select * from sndb_user_login;
+--delete sndb_user_login;
+
 
 INSERTIONS.ADD_GENDER_DATA('female');
 INSERTIONS.ADD_GENDER_DATA('male');
 INSERTIONS.ADD_GENDER_DATA('Others');
 
-INSERTIONS.SNDB_ADD_user_account(1,'Meenakshi','Kumbhar','fds@fmail.com',562134578,'NEU','CEO','MSIS',1,'02-Jan-22','1',CURRENT_TIMESTAMP-10);
+
+
+INSERTIONS.SNDB_ADD_user_account(1,'Meenakshiea','Kumbhar','fds@fmail.com',562134578,'NEU','CEO','MSIS',1,'02-Jan-22','1',CURRENT_TIMESTAMP-10);
 INSERTIONS.SNDB_ADD_user_account(2,'Shabana','Kum1','sa@fmail.com',562134778,'NEU','CEO','MSIS',2,'02-Jul-22','1',CURRENT_TIMESTAMP+15);
 INSERTIONS.SNDB_ADD_user_account(3,'sannidhi','Khar','yhs@fmail.com',562138578,'NEU','CEO','MSIS',3,'02-feb-22','1',CURRENT_TIMESTAMP+11);
-
+INSERTIONS.SNDB_ADD_user_account(4,'Niksi','Khar','yhs@fmail.com',562138578,'NEU','CEO','MSIS',3,'02-feb-22','2',CURRENT_TIMESTAMP+11);
+INSERTIONS.SNDB_ADD_user_account(5,'Mi','Kr','tre@fmail.com',562194578,'NEU','CEO','MSIS',1,'06-Jan-22','1',CURRENT_TIMESTAMP+10);
+INSERTIONS.SNDB_ADD_user_account(6,'Mei','har','tyys@fmail.com',522134578,'NEU','CEO','MSIS',2,'13-mar-22','1',CURRENT_TIMESTAMP-1);
+INSERTIONS.SNDB_ADD_user_account(7,'Mshi','ar','sdsf@fmail.com',562934578,'NEU','CEO','MSIS',1,'13-Jan-22','1',CURRENT_TIMESTAMP+1);
 end;
+
+--begin
+--INSERTIONS.SNDB_ADD_STATUS_data('Accepted');
+--INSERTIONS.SNDB_ADD_STATUS_data('Rejected');
+--INSERTIONS.SNDB_ADD_STATUS_data('Pending');
+--INSERTIONS.SNDB_ADD_STATUS_data('test');
+--end;
 --
+--begin
+--INSERTIONS.SNDB_ADD_FRIEND_DATA(5,4,TO_TIMESTAMP('09-JUL-22 12:21:32', 'DD-MON-YY HH24:mi:ss'),1,TO_TIMESTAMP('09-JUL-22 13:21:32', 'DD-MON-YY HH24:mi:ss'),'TEST',TO_TIMESTAMP('10-JUL-22 12:21:32', 'DD-MON-YY HH24:mi:ss'),TO_TIMESTAMP('10-JUL-22 12:21:32', 'DD-MON-YY HH24:mi:ss'));
+--INSERTIONS.SNDB_ADD_FRIEND_DATA(6,5,TO_TIMESTAMP('07-JUL-22 12:21:32', 'DD-MON-YY HH24:mi:ss'),1,TO_TIMESTAMP('09-JUL-22 13:21:32', 'DD-MON-YY HH24:mi:ss'),'TEST',TO_TIMESTAMP('10-JUL-22 12:21:32', 'DD-MON-YY HH24:mi:ss'),TO_TIMESTAMP('11-JUL-22 12:21:32', 'DD-MON-YY HH24:mi:ss'));
+--INSERTIONS.SNDB_ADD_FRIEND_DATA(6,4,TO_TIMESTAMP('01-JUL-22 12:21:32', 'DD-MON-YY HH24:mi:ss'),1,TO_TIMESTAMP('02-JUL-22 13:21:32', 'DD-MON-YY HH24:mi:ss'),'TEST',TO_TIMESTAMP('02-JUL-22 12:21:32', 'DD-MON-YY HH24:mi:ss'),TO_TIMESTAMP('03-JUL-22 12:21:32', 'DD-MON-YY HH24:mi:ss'));
+--INSERTIONS.SNDB_ADD_FRIEND_DATA(7,4,TO_TIMESTAMP('21-JUL-22 12:21:32', 'DD-MON-YY HH24:mi:ss'),1,TO_TIMESTAMP('22-JUL-22 13:21:32', 'DD-MON-YY HH24:mi:ss'),'TEST',TO_TIMESTAMP('23-JUL-22 12:21:32', 'DD-MON-YY HH24:mi:ss'),TO_TIMESTAMP('24-JUL-22 12:21:32', 'DD-MON-YY HH24:mi:ss'));
+--
+--INSERTIONS.SNDB_ADD_SNDB_conversation_data(1,4,TO_TIMESTAMP('10-APR-22 12:21:32', 'DD-MON-YY HH24:mi:ss'),null,5);
+--INSERTIONS.SNDB_ADD_SNDB_conversation_data(2,6,TO_TIMESTAMP('10-JUL-22 12:21:32', 'DD-MON-YY HH24:mi:ss'),null,5);
+--INSERTIONS.SNDB_ADD_SNDB_conversation_data(3,6,TO_TIMESTAMP('10-MAR-22 12:21:32', 'DD-MON-YY HH24:mi:ss'),null,4);
+--INSERTIONS.SNDB_ADD_SNDB_conversation_data(4,7,TO_TIMESTAMP('10-JUN-22 12:21:32', 'DD-MON-YY HH24:mi:ss'),null,4);
+--
+--INSERTIONS.SNDB_ADD_SNDB_conversation_data(5,5,TO_TIMESTAMP('10-APR-22 12:21:32', 'DD-MON-YY HH24:mi:ss'),null,1);
+--end;
+--
+--begin
+--INSERTIONS.SNDB_ADD_message_data('hello, come soon',CURRENT_TIMESTAMP,1,5,4, 'yes');
+--INSERTIONS.SNDB_ADD_message_data('Great Well Soon',CURRENT_TIMESTAMP,2,6,5,'YES');
+--INSERTIONS.SNDB_ADD_message_data('hello, come soon',CURRENT_TIMESTAMP,2,4,6, 'yes');
+--INSERTIONS.SNDB_ADD_message_data('Great Well Soon',CURRENT_TIMESTAMP,2,2,5,'YES');
+--
+--end;
+--
+--
+--
+--begin
+--INSERTIONS.SNDB_ADD_GROUP('Team1',sysdate-20,'Yes');
+--INSERTIONS.SNDB_ADD_GROUP('Team2',sysdate+1,'Yes');
+--INSERTIONS.SNDB_ADD_GROUP('Team3',sysdate-10,'Yes');
+--INSERTIONS.SNDB_ADD_GROUP('Team4',sysdate-5,'Yes');
+--end;
+--
+--
+--
+--begin
+--INSERTIONS.SNDB_ADD_user_account_group(4,1);
+--INSERTIONS.SNDB_ADD_user_account_group(5,2);
+--INSERTIONS.SNDB_ADD_user_account_group(4,5);
+--INSERTIONS.SNDB_ADD_user_account_group(5,5);
+--INSERTIONS.SNDB_ADD_user_account_group(6,5);
+--INSERTIONS.SNDB_ADD_user_account_group(7,4);
+--INSERTIONS.SNDB_ADD_user_account_group(7,2);
+--end;
+--
+--
+--begin
+-- SNDB_ADD_payment_request_data(1,2,'REQUESTED',1,'Shop and stop bill',TO_TIMESTAMP('01-MAR-22 04:12.49', 'DD-MON-YY HH24:mi:ss'),'Debit',18);
+--SNDB_ADD_payment_request_data(2,5,'REQUESTED',100,'Shop and stop bill',TO_TIMESTAMP('01-MAR-22 04:12.49', 'DD-MON-YY HH24:mi:ss'),'Debit',21);
+--
+--end;
+--
+--select * from sndb_user_account_group;
+--
+--select *  from sndb_group_recipient;
+--
+--begin
+--INSERTIONS.SNDB_add_group_recipient(1,4,sysdate+1,'Yes');
+--INSERTIONS.SNDB_add_group_recipient(2,5,sysdate+2,'Yes');
+--INSERTIONS.SNDB_add_group_recipient(2,4,sysdate+3,'Yes');
+--INSERTIONS.SNDB_add_group_recipient(2,5,sysdate+4,'Yes');
+--INSERTIONS.SNDB_add_group_recipient(4,7,sysdate-1,'Yes');
+--INSERTIONS.SNDB_add_group_recipient(1,4,sysdate-2,'Yes');
+--INSERTIONS.SNDB_add_group_recipient(4,7,sysdate-3,'Yes');
+--INSERTIONS.SNDB_add_group_recipient(1,4,sysdate+1,'Yes');
+--end;
+--
+--select * from SNDB_group_recipient;
+--select * from SNDB_GROUP_MESSAGE;
+--begin
+--insertions.SNDB_add_reminder_freq('Daily','Yes');
+--insertions.SNDB_add_reminder_freq('Weekly','Yes');
+--end;
+--
+--begin
+--INSERTIONS.SNDB_ADD_GROUP_MESSAGE(1,'Hi',5,'wru',sysdate+5,'YES',sysdate+10,1,sysdate+20,'Read');
+--INSERTIONS.SNDB_ADD_GROUP_MESSAGE(2,'holo',6,'wabu',sysdate+5,'YES',sysdate+10,1,sysdate+20,'Read');
+--INSERTIONS.SNDB_ADD_GROUP_MESSAGE(3,'bye',3,'done',sysdate+5,'YES',sysdate+10,1,sysdate+20,'Read');
+--INSERTIONS.SNDB_ADD_GROUP_MESSAGE(1,'all set',4,'stress',sysdate+5,'YES',sysdate+10,1,sysdate+20,'Read');
+--INSERTIONS.SNDB_ADD_GROUP_MESSAGE(2,'gone',5,'issues',sysdate+5,'YES',sysdate+10,1,sysdate+20,'Read');
+--INSERTIONS.SNDB_ADD_GROUP_MESSAGE(3,'Fly',6,'patience',sysdate+5,'YES',sysdate+10,1,sysdate+20,'Read');
+--INSERTIONS.SNDB_ADD_GROUP_MESSAGE(2,'Fly',4,'patience',sysdate+5,'YES',sysdate+10,1,sysdate+20,'Read');
+--end;
+--select * from SNDB_GROUP_MESSAGE;
+
+
+----
 --DELETE SNDB_USER_ACCOUNT;
 --DELETE SNDB_GENDER_DATA;
 --DELETE SNDB_USER_LOGIN;
 --DELETE SNDB_GROUPS_OF_ROLES;
 --DELETE SNDB_ROLES_PERMISSIONS;
 --delete sndb_user_roles_data;
+--
+--select * from SNDB_USER_LOGIN
+--delete SNDB_STATUS;
+--delete SNDB_Conversation_Data;
+--delete sndb_gender_data;
+--delete sndb_user_account;
+--delete sndb_payment_request_data;
+--delete sndb_logged_in_data;
+--delete sndb_message_data;
+--delete sndb_user_account_group;
+
 
 --
 --    SELECT 
@@ -1974,5 +2127,82 @@ end;
 --    SELECT * FROM SNDB_ROLES_PERMISSIONS;
 --    SELECT * FROM SNDB_GROUPS_OF_ROLES;
 
+--
+--BEGIN
+----INSERTIONS.SNDB_ADD_logged_in_data(1,TO_TIMESTAMP('10-MAY-2022 02:30:33','DD-MON-YY HH24:MI:SS'),NULL);
+----INSERTIONS.SNDB_ADD_logged_in_data(1,TO_TIMESTAMP('11-MAY-2022 02:30:33','DD-MON-YY HH24:MI:SS'),NULL);
+----INSERTIONS.SNDB_ADD_logged_in_data(1,TO_TIMESTAMP('12-MAY-2022 02:30:33','DD-MON-YY HH24:MI:SS'),NULL);
+--
+--insertions.SNDB_ADD_logged_in_data(3,current_timestamp,'');
+--insertions.SNDB_ADD_logged_in_data(3,current_timestamp,null);
+--insertions.SNDB_ADD_logged_in_data('',current_timestamp,current_timestamp+1);
+--insertions.SNDB_ADD_logged_in_data('',current_timestamp,current_timestamp+1);
+--END;
+
+--delete sndb_logged_in_data;
 
 
+--
+--begin
+--ADD_ROLES_PERMISSIONS('CREATE SESSION');
+-- ADD_ROLES_PERMISSIONS('SELECT ON SNDB_USER_ACCOUNT');
+--  ADD_ROLES_PERMISSIONS('EXECUTE ANY PROCEDURE');
+--ADD_ROLES_PERMISSIONS('select on View_Student_details');
+--
+--ADD_GROUP_ROLES(7,1);
+--   ADD_GROUP_ROLES(1,8);
+--  ADD_GROUP_ROLES(1,3);
+--  ADD_GROUP_ROLES(1,4);
+--  end;
+--  
+--  select * from sndb_roles_permissions;
+--  select * from sndb_groups_of_roles;
+--  
+--  select * from sndb_user_account;
+--  
+--  
+
+--
+--create or replace view View_Student_Group_Messages as
+--select a.group_message_id,b.user_id,b.group_id,a.reminder_expiry_date,a.next_reminder_date,
+--c.freq_type,a.is_reminder,a.subject, a.group_message_content,c.is_active
+--from sndb_group_message a, 
+--sndb_group_recipient b, 
+--sndb_reminder_freq c
+--where a.reminder_freq_id= c.reminder_id 
+--and b.group_recipient_id= a.group_message_id;
+--
+--
+--SELECT * FROM View_Student_Group_Messages;
+--
+----grant select on View_Student_details to mkumbhar;
+--
+--select * from sndb_user_login;
+--
+--
+--create or replace view view_friends_message as 
+--select a.friendship_id, a.requester_id , a.addressee_id,b.messsage_content,a.status_comment,b.message_timestamp,
+--b.is_payment_requested from sndb_addfriend_data a, sndb_message_data b where a.friendship_id = b.conversation_id and 
+--a.requester_id = b.from_message_id and a.addressee_id = b.to_message_id;
+--
+--select * from view_friends_message;
+
+
+
+create or replace view View_Student_profile_photo as
+select b.username, a.user_account_id, a.photo_link ,a.time_added ,a.photo_visibility
+from sndb_user_photo_data a, sndb_user_login b where b.user_login_id = a.user_account_id and b.user_type = 'USER' and UPPER(b.username) = GET_LOGGEDIN_USER_ID;
+
+SELECT * FROM View_Student_profile_photo;
+
+GRANT SELECT ON View_Student_profile_photo TO mkumbharea;
+
+nsert into sndb_user_photo_data values(1,3,'http://hrtf//me',TO_TIMESTAMP('03-MAR-22 05.11.42', 'DD-MON-YY HH24:mi:ss'),'Yes');
+insert into sndb_user_photo_data values(2,4,'http://tinyurl/me',TO_TIMESTAMP('05-MAR-22 02.07.54', 'DD-MON-YY HH24:mi:ss'),'Yes');
+insert into sndb_user_photo_data values(2,2,'http://tinyurl/you',TO_TIMESTAMP('06-MAR-22 05.09.59', 'DD-MON-YY HH24:mi:ss'),'No');
+
+SELECT * FROM SNDB_USER_PHOTO_DATA;
+
+select * from sndb_user_account;
+
+select * from sndb_user_login;
