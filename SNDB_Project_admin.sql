@@ -1,0 +1,12 @@
+create user SNDB_PROJECT_ADMIN identified by Spring_team_123;
+--grant all privileges to tester23;
+grant create any table to SNDB_PROJECT_ADMIN  with admin option;
+GRANT UNLIMITED TABLESPACE TO SNDB_PROJECT_ADMIN;
+grant connect,resource to SNDB_PROJECT_ADMIN with admin option;
+GRANT create session TO SNDB_PROJECT_ADMIN with admin option;
+grant create any view to SNDB_PROJECT_ADMIN with admin option;
+grant create any trigger to SNDB_PROJECT_ADMIN with admin option;
+grant create user to SNDB_PROJECT_ADMIN with admin option;
+GRANT DROP USER TO SNDB_PROJECT_ADMIN;
+grant EXECUTE any procedure TO SNDB_PROJECT_ADMIN with admin option;
+grant CREATE PUBLIC SYNONYM to SNDB_PROJECT_ADMIN ;
