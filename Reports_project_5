@@ -1,0 +1,31 @@
+
+/*More than 5 friend requests in a day */
+
+select created_datetime,count(*) from sndb_addfriend_data group by created_datetime having count(*)>5
+
+
+
+/* People who do not have letter 'A' in their first name and last name*/
+select ua.first_name,ua.last_name,md.messsage_content from sndb_message_data md inner join sndb_conversation_data cd on cd.conversation_pri_id=md.conversation_id 
+inner join sndb_user_account ua on ua.user_id=cd.conversation_initiated_id
+where ua.first_name not like '%A%'
+and ua.last_name not like '%A%';
+
+
+
+/* Number of MALE, FEMALE and Others genders in each university*/
+Select * FROM
+(
+select university_name, gd.name as gender,count(*) as cnt from sndb_user_account ua inner join  sndb_gender_data gd on ua.gender_id=gd.gender_id
+group by university_name,gd.name
+) t
+PIVOT
+(
+sum(cnt)
+for gender IN
+('MALE','FEMALE','OTHERS')
+) PivotTable;
+
+
+
+
