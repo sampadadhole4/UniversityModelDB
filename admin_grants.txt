@@ -1,0 +1,26 @@
+create user new_tester_admin identified by Spring_team_123;
+--grant all privileges to tester23;
+grant create any table to new_tester_admin  with admin option;
+GRANT UNLIMITED TABLESPACE TO new_tester_admin;
+grant connect,resource to new_tester_admin with admin option;
+GRANT create session TO new_tester_admin with admin option;
+grant create any view to new_tester_admin with admin option;
+grant create any trigger to new_tester_admin with admin option;
+grant create user to new_tester_admin with admin option;
+GRANT DROP USER TO new_tester_admin;
+grant EXECUTE any procedure TO new_tester_admin with admin option;
+grant CREATE PUBLIC SYNONYM to new_tester_admin ;
+
+
+
+
+SELECT * FROM session_privs
+ORDER BY privilege;
+
+inside_admin
+create user
+GRANT CREATE SESSION TO mkumbhar
+GRANT SELECT ON SNDB_USER_ACCOUNT TO mkumbhar
+GRANT EXECUTE ANY PROCEDURE TO mkumbhar
+GRANT select on View_Student_details TO mkumbhar
+CREATE OR REPLACE PUBLIC SYNONYM sndb_user_account for NEW_TESTER_ADMIN.sndb_user_account;
